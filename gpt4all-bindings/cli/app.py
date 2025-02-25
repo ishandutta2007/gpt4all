@@ -59,9 +59,13 @@ def repl(
         int,
         typer.Option("--n-threads", "-t", help="Number of threads to use for chatbot"),
     ] = None,
+    device: Annotated[
+        str,
+        typer.Option("--device", "-d", help="Device to use for chatbot, e.g. gpu, amd, nvidia, intel. Defaults to CPU."),
+    ] = None,
 ):
     """The CLI read-eval-print loop."""
-    gpt4all_instance = GPT4All(model)
+    gpt4all_instance = GPT4All(model, device=device)
 
     # if threads are passed, set them
     if n_threads is not None:
@@ -109,13 +113,11 @@ def _old_loop(gpt4all_instance):
         full_response = gpt4all_instance.chat_completion(
             MESSAGES,
             # preferential kwargs for chat ux
-            logits_size=0,
-            tokens_size=0,
             n_past=0,
-            n_ctx=0,
             n_predict=200,
             top_k=40,
             top_p=0.9,
+            min_p=0.0,
             temp=0.9,
             n_batch=9,
             repeat_penalty=1.1,
@@ -152,6 +154,7 @@ def _new_loop(gpt4all_instance):
                 temp=0.9,
                 top_k=40,
                 top_p=0.9,
+                min_p=0.0,
                 repeat_penalty=1.1,
                 repeat_last_n=64,
                 n_batch=9,

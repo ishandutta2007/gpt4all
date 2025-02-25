@@ -8,9 +8,8 @@ Item {
     id: root
     property string title: ""
     property Item contentItem: null
-    property Item advancedSettings: null
-    property var openFolderDialog
-    signal restoreDefaultsClicked
+    property bool showRestoreDefaultsButton: true
+    signal restoreDefaults
 
     onContentItemChanged: function() {
         if (contentItem) {
@@ -20,22 +19,27 @@ Item {
         }
     }
 
-    onAdvancedSettingsChanged: function() {
-        if (advancedSettings) {
-            advancedSettings.parent = advancedInner;
-            advancedSettings.anchors.left = advancedInner.left;
-            advancedSettings.anchors.right = advancedInner.right;
-        }
+    ConfirmationDialog {
+        id: restoreDefaultsDialog
+        dialogTitle: qsTr("Restore defaults?")
+        description: qsTr("This page of settings will be reset to the defaults.")
+        onAccepted: root.restoreDefaults()
     }
 
     ScrollView {
+        id: scrollView
         width: parent.width
         height: parent.height
-        padding: 15
-        rightPadding: 20
+        topPadding: 15
+        leftPadding: 5
         contentWidth: availableWidth
         contentHeight: innerColumn.height
-        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+        ScrollBar.vertical: ScrollBar {
+            parent: scrollView.parent
+            anchors.top: scrollView.top
+            anchors.left: scrollView.right
+            anchors.bottom: scrollView.bottom
+        }
 
         Theme {
             id: theme
@@ -50,43 +54,24 @@ Item {
             Column {
                 id: contentInner
                 Layout.fillWidth: true
-            }
-
-            Column {
-                id: advancedInner
-                visible: false
-                Layout.fillWidth: true
+                Layout.maximumWidth: parent.width
             }
 
             Item {
                 Layout.fillWidth: true
+                Layout.topMargin: 20
                 height: restoreDefaultsButton.height
-                MyButton {
+                MySettingsButton {
                     id: restoreDefaultsButton
                     anchors.left: parent.left
+                    visible: showRestoreDefaultsButton
                     width: implicitWidth
                     text: qsTr("Restore Defaults")
                     font.pixelSize: theme.fontSizeLarge
                     Accessible.role: Accessible.Button
                     Accessible.name: text
                     Accessible.description: qsTr("Restores settings dialog to a default state")
-                    onClicked: {
-                        root.restoreDefaultsClicked();
-                    }
-                }
-                MyButton {
-                    id: advancedSettingsButton
-                    anchors.right: parent.right
-                    visible: root.advancedSettings
-                    width: implicitWidth
-                    text: !advancedInner.visible ? qsTr("Advanced Settings") : qsTr("Hide Advanced Settings")
-                    font.pixelSize: theme.fontSizeLarge
-                    Accessible.role: Accessible.Button
-                    Accessible.name: text
-                    Accessible.description: qsTr("Shows/hides the advanced settings")
-                    onClicked: {
-                        advancedInner.visible = !advancedInner.visible;
-                    }
+                    onClicked: restoreDefaultsDialog.open()
                 }
             }
         }
